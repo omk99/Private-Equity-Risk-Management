@@ -1,0 +1,284 @@
+# Run in LaTex
+
+\documentclass[12pt]{article}%
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage[nohead]{geometry}
+\usepackage[singlespacing]{setspace}
+\usepackage[bottom]{footmisc}
+\usepackage{indentfirst}
+\usepackage{endnotes}
+\usepackage{graphicx}%
+\usepackage{rotating}
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+\setcounter{MaxMatrixCols}{30}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\newcommand{\pd}[2]{\frac{\partial#1}{\partial#2}}
+\makeatletter
+\def\@biblabel#1{\hspace*{-\labelsep}}
+\makeatother
+\geometry{left=1in,right=1in,top=0.6in,bottom=0.8in}
+\begin{document}
+
+\title{Risk Management for Private Equity Investors}
+\author{Om Kanabar\thanks{Address: Cambridge Judge Business School, University of Cambridge, Trumpington Street, Cambridge, CB2 1AG, United Kingdom, telephone:\ +447885421422, e-mail:
+\textit{ok305@cam.ac.uk}}\medskip\\{\normalsize Judge Business School, University of Cambridge}}
+\maketitle
+
+\sloppy%avoids the breakage of words at the end of lines, by adjusting spaces between words inside the lines
+
+\setstretch{0.3}
+
+\begin{abstract}
+Your abstract goes here.
+.
+\end{abstract}
+
+\strut
+
+\textbf{Keywords:} Private equity; Risk management; Stochastic models.
+
+\strut
+
+%\textbf{JEL Classification Numbers:} R14, H0, XY.
+
+\pagebreak%breaks to the next page
+\setstretch{1.5} %makes space between lines to be double, use singlespacing for space 1
+
+
+\section{Introduction}
+\label{intro} %for citation purposes later in the text
+
+Private market assets under management have grown by \$4 trillion over the past decade, representing a percentage increase of 170\% (McKinsey, 2020). The majority of this has come from private equity (PE) funds which includes leveraged buyout funds, venture capital, and growth equity, and has the potential to deliver outsized, uncorrelated returns. Institutional investors rely on such asset classes to diversify their exposure to public markets and are increasingly likely to either invest in GP-led intermediary funds or engage in direct PE investments (such as the Canada Pension Plan Investment Board's recent investments into Petco and Merlin Entertainments). However, there continues to be insufficient understanding of the risks created by this illiquid, segmented market (Diller and Kaserer, 2015), which is in particular caused by an incomplete risk management framework for both originators and investors.
+
+This paper, drawing grossly on the work of Buchner and Wagner (2017), attempts to ameliorate this problem by presenting a Value at Risk model which accounts both for fees and the characteristic skew of PE returns. I employ a stochastic cash flow model which incorporates Gaussian noise, Poisson jump diffusion, and stock market correlations to ensure empirical validity. The model was also developed without access to PE datasets (due to funding constraints) and therefore, I propose additional calibration methods in the latter sections, which are easily implemented using a conditional least squares (CLS) model.
+\section{Literature review}
+\label{review}
+
+This section presents a brief review of existing research on PE risk management, which can be divided into stochastic models, factor pricing models, and corporate finance-based models. Stochastic cash flow models form the largest part of the academic research, with Buchner and Wagner (2017) developing a continuous time model which shows that PE fees create risk-taking incentives that are not fully priced by investors. This leads to excessive risk-taking by GPs and a lack of transparency regarding the pricing of fees, which are also often ignored by other PE models. An interesting application of this research relates to their lifetime valuation of PE fees, which could potentially be used to derive fundamental values for stakes in GP holding companies (an investment strategy adopted by Goldman Sachs' Petershill group). This paper builds on existing work by Buchner (2014) but does not present a Value at Risk model accounting for these additional fees - an area which I will attempt to add to this research. Their research methodology also relies heavily on the use of geometric Brownian motions, which imposes parametric restrictions and does not account for the positive skew of PE markets. Ungsgard (2020) adopts a similar approach but focuses on portfolio data for multiple PE funds and also considers cash flow dynamics in greater detail, finding that these types of differential equation models explain fund distributions more accurately than capital calls due to observed lags in the speed of capital contributions at the start of a fund's lifetime. A generalisation of this widely accepted stochastic model is the Yale Endowment Model, which incorporates an exogenous growth term and a bowing factor for return distributions (Harte and Buchner, 2017). Finally, Bongaerts and Charlier (2009) use a similar model but focus on risk weightings and capital requirements for PE investments, providing an implicit risk management tool.
+
+Factor pricing models provide a rigorous understanding of risk through a pricing lense rather than a bottom-up cash flow methodology, relying on the standard pricing restrictions that investors are rewarded for risk undertaken. Driessen et al (2007) present a Generalised Method of Moments (GMM) framework to assess risk exposure to a non-traded asset. The estimation strategy uses cash flow data rather than self-reported net asset values (NAV), in an attempt to mitigate bias or measurement error. They find that PE returns are surprisingly uncorrelated with public markets, casting doubt on the inclusion of a stock market correlation parameter in most models. They also conclude that risk-adjusted PE returns are surprisingly low (particularly in the longer term), providing evidence that investors may achieve greater alpha elsewhere. This paper builds on work by Kaplan and Schoar (2005) who assess abnormal performance of PE funds using public market equivalents, and Jones and Rhodes-Kropf (2004), who regress NAV-based retuns on various risk factors. The main advantage of this GMM specification is the lack of parametric or distributional assumptions for factor returns or idiosyncratic shocks, avoiding any problems with p-hacking or data mining. Diller and Kaserer (2007) extend this pricing factor model using a weighted least squares (WLS) regression, concluding that total fund inflows, GP skills, and investment risk are all significant in explaining returns. Finally, Jegadeesh et al (2009) employ a novel approach, estimating risk and expected returns based on the market prices of exchange-traded funds (ETFs), which invest in unlisted PE funds. They find that these liquid markets price an expected abnormal return of greater than 0.25\% but less than 2.25\% (after fees). They also find that markets do not expect PE funds to earn extreme abnormal returns in the long-run, which is inconsistent with various historical observations that shows extreme positive abnormal returns in a significant proportion of funds due to positive skew and excess kurtosis. 
+
+Finally, there is corporate finance-based risk management literature which is predominantly produced by practitioners, who present both analytical and qualitative solutions to PE risk management (in particular from a GP perspective). Diller et al (2015) provide a summary of this part of the research and focus on risk management from the perspective of GPs (both ex ante in deciding on investments and ex post in mitigating risks). They find that the risk for an investor losing any capital over a holding period of a portfolio of 20 funds is 1.4\%, falling to 1\% in 50 funds, indicating the low correlations between funds and the diversification opportunities. They also state that VaR metrics that purely measure market risk are not useful in a PE context due to the illiquidity, and therefore, there must be a VaR measure which considers both liquidity and cash flow risks (both of which are developed by Buchner (2014)).
+
+\section{The model}
+\label{model}
+I base my theoretical model on the work of Buchner and Wagner (2017), employing a similar specification for drawdowns, distributions, and fund value dynamics. The first model is given by:
+\begin{equation}
+P_{t}=V_{t}+C_{t}
+\end{equation}
+where $V_{t}$ is the NAV of the fund and $C_{t}$ is the cash balance. I assume that drawdowns and distributions move between these two entities, producing a closed portfolio. The dynamics are specified as:
+\begin{equation}
+dV_{t}=V_{t}(\mu_{V}dt+\beta_{V}\sigma_{M}dB_{M,t}+\sigma_{\epsilon}dB_{\epsilon,t})+dD_{t}-dR_{t}
+\end{equation}
+\begin{equation}
+dC_{t}=C_{t}r_{f}dt-dD_{t}+dR_{t}
+\end{equation}
+where $\mu_{V}$ is the fund growth rate (in our case this excludes PE fees), $\beta_{V}$ is the stock market beta, $\sigma_{M}$ is the market variance, $r_{f}$ is the risk-free rate, and $dt$ is a change in continuous time. I introduce randomness into the model by including two standard Brownian motions ($dB_{M,t}$, $dB_{\eta,t}$), which have the desirable mean-variance properties leading to an overall GBM. Drawdown and distribution dynamics are summarised by $dD_{t}$ and $dR_{t}$ respectively, which follow similar specifications to the Buchner model, but I remove the stock market correlations here to reduce model complexity. Essentially, drawdowns follow an exogenous rate but have a degree of randomness introduced by a third Brownian motion. This leads to a concentration of drawdowns in the investment period (as expected) and an exponential decrease over time, which accounts for the harvesting period. Distributions are organised in a similar way with a constant, deterministic mean term and a random component. Distributions are also derived from fund value as distributions are performance-linked, leading to low distributions at the start of the fund and greater distributions as investments are sold.
+A detailed derivation of the differential equations for drawdowns and distributions is included in the Appendix.
+
+The second model introduces fee dynamics, with the GP entitled to a management fee (as a percentage of committed capital) and performance fee (carried interest) which is paid as a fraction of net cash flow subject to certain conditions. This fee structure is summarised as:
+\begin{equation}
+dF_{t}=c_{m}C_0dt+c_{p}max(dP_{t}-dD_{t}-c_{m}C_0dt) \cdot 1_{(IRR_{t}>h)}
+\end{equation}
+where $c_{m}$ is the management fee parameter, $C_{0}$ is committed capital, $c_{p}$ is the performance fee parameter, and $h$ is the hurdle rate required for a performance fee to be paid. The management fee component is constant each period and can in practice be ignored as we can specify that $\mu_{V}$ accounts for management fees. The performance fee component creates non-linearity in the fee variable which also feeds into the final portfolio variable. Intuitively, if all else is kept constant, fees will only kick in when the fund is in profit (and producing an internal rate of return ($IRR_{t}$) greater than the required hurdle), which means that fees reduce upside gain without affecting the left hand side of the distribution of returns. This means that performance fees will have no effect on VaR except in specific cases when the initial IRR is above the hurdle rate, leading to fee outflows to the GP, followed by a reversal in gains. At this time, the fees would have already been paid but this easily be mitigated through carry clawbacks.
+
+Despite this being the case, when fees are introduced, there is a mismatch in incentives as the GP (who is in control of the fund) looks to maximise its own payoff. This will lead to excessive risk-taking as shown by Buchner and Wagner (2017) and this will have an impact on VaR (which has not been explored in their paper). I attempt to quantify this effect by making assumptions on the alpha generation of PE funds and subsequently showing that GPs always choose PE investments with greater idiosyncratic variance, even if the expected returns (and alpha) are identical. This will be explained further in the Calibration section. A final note on this fee structure is that equation (4) is only valid for carried interest without catch-up or clawbacks provisions as this reduces the model's complexity and ensures tractability. The fee structure is also based on a European waterfall, which calculates carry on a whole-fund basis as opposed to an American waterfall, which allows carry to accrue on a deal-by-deal basis.
+
+The third model in consideration is a stochastic model with Merton jump diffusion (1976) to generate positive skew in the fund value distribution and the subsequent distribution of IRRs. The Merton jump model utilises a Poisson intensity parameter to determine the frequency of each jump and a Gaussian variable to determine the size of the jump. The model is summarised below:
+\begin{equation}
+dV_{t}=V_{t}((\mu_{V}-\lambda\mu_j)dt+\beta_{V}\sigma_{M}dB_{M,t}+\sigma_{\epsilon}dB_{\epsilon,t}+J_{t}dP_{t})+dD_{t}-dR_{t}
+\end{equation}
+where $\lambda$ is the Poisson intensity parameter, $\mu_{J}$ is the mean of $J_{t}$, $J_{t}$ is a random percentage jump size, which follows a lognormal distribution with certain parameters, and $dP_{t}$ is the Poisson process generator. This formulation is based on Lambrecht and Tse's 2019 paper on bank insolvency, which utilises a similar (but negative) Poisson jump process, and Bayraktar and Egami's 2007 paper on optimising venture capital investments in jump diffusion models. This additional parameter modifies the standard GBM assumption to fit PE return distributions better, leading to more accurate maximum loss predictions. Naturally, this is still a parametric assumption which introduces the possibility of functional form misspecification but given the standard GBM is known to be violated in practice, this provides some progress on existing distributional assumptions.
+
+To conclude this section, I present the final VaR metric, which focuses on quantifying market risk. I define VaR in a similar way to Buchner with respect to a certain time horizon h, as the worst loss expected given a certain probability. In the context of my model, this translates into the following expression:
+\begin{equation}
+Prob(P_{t}-P_{t+h} \ge VaR_{t,h}(\alpha))=1-\alpha
+\end{equation}
+Given the various critiques of just using VaR in PE risk management, this model can also be adjusted to measure Liquidity-at-Risk and Cash-Flow-at-Risk (Buchner, 2014) but I do not consider these models in this paper in the interest of brevity. A note on this VaR model is that given the model is based on a ranking, it is robust when introducing skew or kurtosis. This is because unlike a standard symmetric confidence interval, VaR is not susceptible to bias from changes in distribution assumptions.
+
+\section{Model calibration}
+\label{Calibration}
+To calibrate the first model, I follow a similar process to Buchner (2014) and Ungsgard (2020) and assume that the PE fund is an efficient portfolio which lies on the security market line (following the Sharpe-Lintner CAPM). I then assume the fund has a market beta of 1.3 (Ang et al, 2013) and risk-free rate of 0.01. From this, I derive the PE fund's expected return, which is $\mu_{V}$ in the model and also assume that the fund has an idiosyncratic variance of 0.35 as in Buchner's specification. The remaining model parameters (including drawdown and distribution parameters) are summarised in Table 1 in the Appendix.
+
+The second model (incorporating fees) has three additional parameters which need to be set. I first assume that there are no management fees ($c_m=0$), which is for simplicity as the growth rate can be augmented to account for this constant cash outflow. This will also simplify comparisons as we can focus purely on the more interesting carry effect which introduces further dynamics into the PE risk management structure. I assume carry fees are charged at 20\% of net cash flow, which comes from anecdotal evidence in the literature and the empirical bunching seen at this level (Choi et al, 2011). This carry will only be paid if the hurdle IRR is met and this is assumed to be 8\%.
+
+Finally, I introduce endogeneity into the idiosyncratic volatility parameter ($\sigma_{\epsilon}$), which was previously assumed to be constant and equal to 0.35 in the Buchner model. Assuming the GP manages this fund in isolation (although this can easily be generalised to multiple follow-on funds), it can be shown that the GP will maximise the risk-neutral expectation of its fees over the fundâs lifetime. Looking at the equation denoting total fees earned, the management fees are constant, so the only variables which can be changed are the fund return, market beta, and the idiosyncratic volatility. I also assume that the fund return and market beta are kept constant (which can be relaxed if necessary), implying that the GP does not have direct control over the alpha of the fund nor the correlation with the stock market (following the Sharpe-Lintner CAPM). In this case, the GP will maximise total carry with respect to $\sigma_{\epsilon}$. This is because carry fees are structured in a similar way to call options, with an asymmetric payoff which is increasing in volatility. However, given the hurdle rate condition also needs to be fulfilled, the GP will not choose an infinite volatility, leading to a global maximum. A closed-form, analytical solution is not available for this function and therefore, to find the maximum, I implement Euler discretisation and solve numerically through Monte Carlo simulation to find the idiosyncratic volatility which maximises total carry.
+
+After implementing a maximisation algorithm, I find that the $\sigma_{\epsilon}$ which maximises carry fees for the GP is equal to 1.4. However, this introduces wild swings into the fund value dynamics and creates a distribution of IRRs not comparable to empirical evidence. Reasons for this relate to the assumption that the fund operates in isolation, whereas in reality GPs raise multiple funds in sequence, which is likely to reduce risk appetite for each individual fund. This is due to the reputational risk that may be experienced when a fund experiences large losses. A second reason is that there may not actually be a way to increase idiosyncratic volatility by this much. One could argue that by introducing debt and equity funding into the model, this could be explained by an extremely high debt level in portfolio companies, but there are still borrowing constraints in reality to the amount of debt a company can issue. Therefore, it would be useful to conduct empirical analysis of maximum volatilities that a fund could implement to set an upper bound on volatility, but at this stage, I assume an idiosyncratic volatility of 0.7, which produces an acceptable IRR distribution.
+
+To conclude the calibration section, I must also set the parameters in the third Merton jump model. There are three additional parameters to calibrate in this model, which are the jump intensity lambda, the mean of the jump process, and the volatility of the jump. The most unbiased way to calibrate these parameters would have been to implement a CLS model using data from Cepres to find the model of best fit. This would have generated strong consistency, asymptotic normality, and an iterated logarithm rate of convergence. However, given funding constraints and lack of PE data, I have instead resorted to calibrating the model by studying the distribution of IRRs for a set of private equity funds. Kupperman and Griffiths (2001) show that distributions of US and European PE returns are similar in shape with moderate bias towards higher returns. They also find that 15\% of managers have a final IRR of below zero with European returns 400bps less than US PE funds. Finally, they show that approximately 10\% of funds generate in excess of 20\% net IRR and a significant number of cases in excess of 100\%, providing evidence for positive skew. This is corroborated by Jacobson (2020) who (using the Venture Economics dataset) finds that buyout funds generate a positive skew of 1.55 and a kurtosis of 3.38. He asserts that this comes from exposure to large outlier returns, manager expertise to limit downside losses, and the strategy of targeting undervalued companies. Using this information, I iteratively generated Monte Carlo simulations for different values of the parameters and found that setting $\lambda$ equal to 0.1, $\mu_{j}$ equal to 0.2, and $\sigma_{j}$ equal to 0.2 provides an acceptable IRR distribution and fund value dynamics. However, naturally given this has not been derived using a consistent estimator, this will contain bias and therefore, the results must be interpreted bearing this in mind.
+
+\section{Results}
+\label{results}
+
+The final set of results come from a Monte Carlo simulation with 10,000 iterations and 1000 time steps (which divide up a fund life of 12 years). The convergence of results is robust but there was still noise and fractal-like behaviour in the VaR output, which led me to apply non-parametric Loess smoothing. This can be avoided by increasing the number of iterations and time steps but due to computer processing constraints, this was not possible.
+
+Figure 1 illustrates the various dynamics generated by the fund under the Buchner model. The graphs appear similar to the original paper, which is expected given the model is almost identical, and this provides confidence that my subsequent analysis is comparable to previous research. The graphs are in-line with PE theory, with a capital drawdowns increasing at their fastest rate at the beginning of the fund and distributions increasing rapidly at the beginning of the harvesting period and then plateauing. The fund value dynamics illustrate a peak in the fund value just before the harvesting period starts, after which total value held within the fund (not the investor's portfolio position) trends downwards and is liquidated. This relates to the boundary condition between distributions and fund value, as cumulated distributions at fund maturity must account for liquidation values.
+
+Figure 2 compares the fund value dynamics for the first and third models, demonstrating the effect of introducing a jump parameter. The expected path of fund value peaks higher under this new specification but the median path is not significantly affected. The confidence intervals are also greater but this is misleading under a skewed distribution and must be adjusted. This leads to lower VaR figures since a greater proportion of paths are de-risked as they have gained so much that there is very little chance of a reversal.
+
+Figures 3,4, and 5 present VaR graphs at fund initiation for standard confidence intervals of 10\%, 5\%, and 1\%,  and shows that all three specifications share some common traits. They all display a steep increase in VaR initially, which comes from capital being drawndown from the cash pool and invested in risky assets. This continues to grow until the fund enters the harvesting period leading to a flattening of all curves. The Buchner and Poisson jump models exhibit similar dynamics with only a small divergence (which does however widen over time). The absolute VaR for the Poisson jump model is approximately 10\% lower at liquidation and has a steeper downward trend during the harvesting period. This is likely to come from the compounding effect in fund returns, which is stronger when there is positive skew present. An interesting difference between these two models is that as the confidence level changes, the divergence point comes later, with the VaR dynamics at 1\% almost identical for both models until year 5.
+
+There is a stark divergence in the fee-based model compared to the other two and this comes from the change in incentives of the GP, who now takes on more risk. The absolute level of risk at fund liquidation is more than double the Buchner model under all confidence levels and there is a much smaller downward trend in the latter period of the fund lifetime. The reason for this relates to intermediate capital distributions, which limit the compounding effects in fund returns (Buchner, 2014). This is exacerbated by introducing fees as they are similar to distributions but are not even paid into the portfolio - they are just a leakage from the fund. This leads to a stagnation in the level of risk up until full liquidation. The ramping up of risk is much steeper at the beginning of the fund for the third model but the levelling off point is similar between all three models. This levelling off point does however change for different confidence levels. For high confidence levels, the VaR peaks more quickly and then falls but for low confidence levels, the peak comes later.
+
+
+\section{Concluding remarks}
+\label{conclusion}
+
+This paper attempts to build on existing research to fill the gap of risk management in private equity funds and focuses on a framework from an investor's perspective. The use of novel specifications aims to help investors both understand risk dynamics and exposure at different periods in a fund's lifetime and help to price this risk, to show whether PE funds actually deliver risk-adjusted alpha. However as stated in previous, this estimation strategy has only considered a select few numerical methods, which are easily improved through the use of granular PE return data. Therefore, this paper is only a preliminary foray into a problem facing investors who aim to understand the exact portfolio risks presented by private investments. The framework is also easily adapted to specific fund types (such as infrastructure funds, geography-specific funds), through sector-specific modifications to the functional form and calibration methods based on historical data. This presents an opportunity for this model to be used in practice by investors. (not sure how to phrase)
+
+The results generally demonstrate that there may be a lack of understanding by investors about the risk-taking appetites of GPs and the various alignment issues that carried interest claims to solve. This agency problem can never be solved until GPs take unlevered equity stakes in their own funds and may be an unsolvable problem for prospective investors. 
+
+ \pagebreak
+
+\singlespacing
+
+\appendix
+\section*{Appendix}
+
+\footnotesize %reduces font size inside the table
+
+\begin{table}[h]
+    \label{table1}
+    \caption{Summary of Key Inputs} % title of Table
+    \centering % used for centering table
+    \begin{tabular}{l r r} % centered columns (4 columns)
+    \toprule \toprule
+    Input & Notation & Value \\ [0.5ex] % inserts table
+    %heading
+    \midrule % inserts single horizontal line
+    Riskless rate & r_f & 0.01 \\ % inserting body of the table
+    Expected stock market return & \mu_M & 0.11 \\
+    Stock market volatility & \sigma_M & 0.15 \\
+    PE return volatility & \sigma_M & 0.4 \\
+    Market beta of PE funds & \beta_V & 1.30 \\
+    Alpha of PE funds & \alpha & 0.04 \\
+    Idiosyncratic volatility & \sigma_{\epsilon} & 0.35 \\
+    Return correlation between stock market and PE fund return & \rho_V & 0.49 \\
+    Drawdown rate of PE funds & \delta & 0.41 \\
+    Volatility of drawdown rate & \sigma_\delta & 0.21 \\
+    Average distribution rate & \nu & 0.08 \\
+    Volatility of distribution rate & \sigma_\nu & 0.80 \\
+    Management fee percentage & c_{m} & 0.0 \\
+    Carried interest percentage & c_{p} & 0.2 \\
+    Hurdle rate & h & 0.08 \\
+    Poisson jump parameter & \lambda & 0.1 \\
+    Mean of jump parameter & \mu_{J} & 0.2 \\
+    Volatility of jump parameter & \sigma_{J} & 0.2 \\
+    Initial committed capital & C_{0} & 100 \\ [1ex]
+    \bottomrule %inserts single line
+    \end{tabular}
+    \label{table:summary} % is used to refer this table in the text
+\end{table}
+\normalsize %brings font size back to normal
+\vspace{20pt}
+\noindent \textbf{Derivations}
+
+    \noindent Drawdown dynamics are given by the following equation
+    \begin{equation}
+    dD_{t}=\delta_{t}(C_{0}-D_{t}) \cdot 1_{(0 \leq t \leq T)} dt
+    \end{equation}
+    with the drawdown rate given by the following specification
+    \begin{equation}
+    \delta_{t}=\delta + \sigma_\delta B_{\delta,t}.
+    \end{equation}
+    
+   \noindent Distribution dynamics are given by the following equation
+    \begin{equation}
+    dR_{t}=\nu_{t}V_{t}dt, \; \; and \; \; R_{t}=\int_{0}^{t}\nu_{u}V_{u}du + V_{t} \cdot 1_{(t=T)}
+    \end{equation}
+    with the distribution rate given by the following specification
+    \begin{equation}
+    \nu_{t}=\nu t + \sigma_\nu B_{\nu,t}.
+    \end{equation}
+
+\begin{figure}
+    \centering
+    \caption{Fund dynamics}
+    \includegraphics[scale=0.42]{images/DynamicsFinal.jpg}
+    \label{Figure:1}
+    \textit{Note: Lines represent average values and shaded areas indicate 80\% confidence intervals.}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{Comparison of fund value dynamics}
+    \includegraphics[scale=0.42]{images/Comparison.jpg}
+    \label{Figure:2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{VaR(10\%) at fund initiation}
+    \includegraphics[scale=0.45]{images/VaR.10.png}
+    \label{Figure:3}
+    \footnotesize
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{VaR(5\%) at fund initiation}
+    \includegraphics[scale=0.45]{images/VaR.5.png}
+    \label{Figure:4}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{VaR(1\%) at fund initiation}
+    \includegraphics[scale=0.45]{images/VaR1.png}
+    \label{Figure:5}
+\end{figure}
+
+
+
+
+
+ \pagebreak
+  \pagebreak
+   \pagebreak
+ \vspace{40pt}
+
+
+\begin{thebibliography}{9}
+                                                                                               %
+\bibitem {DLP2007}Driessen, JJ. Aivalotis, D. Spaulding, G. Stockmayer, The bay area
+jobs-housing mismatch, Applied Demography - University of California at
+Berkeley working paper (2001).
+
+\bibitem {BL1996}J.K. Brueckner, F-C. Lai, Urban growth controls with resident
+landowners, Regional Science and Urban Economics 26 (1996) 125-144.
+
+\bibitem {B1999}J.K. Brueckner, Modeling urban growth controls, in: A.
+Panagariya, P. Portney, R.M. Schwab (Eds.), Environmental and Public
+Economics: Essays in Honor of Wallace E. Oates, Edward Elgar Publishers, 1999, pp. 151-168.
+
+\end{thebibliography}
+
+
+
+\end{document}
