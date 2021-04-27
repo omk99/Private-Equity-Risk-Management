@@ -1,0 +1,22 @@
+S=100; X=0.5; T=12;mu=0.12;sigma=0.3; Lambda=0.4;
+a=0.2; b=0.2; Nsteps=252; Nsim=100; alpha=0.05
+Delta_t=T/Nsteps
+mean_Y = exp(a + 0.5*(b^2))
+variance_Y = exp(2*a + b^2) * (exp(b^2)-1)
+M = S * exp(mu*T + Lambda*T*(mean_Y-1))
+V=S^2*exp(2*mu+sigma^2)*T+ Lambda*T*(variance_Y + mean_Y**2 - 1)-exp(2*mu*T + 2*Lambda*T*(mean_Y - 1))
+simulated_paths = matrix(0,Nsim, Nsteps+1)
+data=as.data.frame(simulated_paths, row.names = NULL, optional = FALSE,make.names = TRUE,)
+simulated_paths[,1]=S
+Z_1=matrix( rnorm(Nsim*Nsteps,mean=0,sd=1), Nsim, Nsteps) 
+Z_2=matrix( rnorm(Nsim*Nsteps,mean=0,sd=1), Nsim, Nsteps)
+Poisson=matrix( rpois(Nsim*Nsteps,Lambda*Delta_t), Nsim, Nsteps)
+for (i in 1:Nsteps)
+  simulated_paths[,i+1] = simulated_paths[,i]*exp((mu - sigma**2/2)*Delta_t +sigma*sqrt(Delta_t)* Z_1[,i] + a*Poisson[,i] + sqrt(b**2) * sqrt(Poisson[,i])* Z_2[,i])
+final_prices=simulated_paths[,Nsteps+1]
+mean_jump = mean(final_prices)
+var_jump = var(final_prices)
+sd_jump = sd(final_prices)
+skew_jump =skewness(final_prices)
+kurt_jump =kurtosis(final_prices)
+skew_jump
