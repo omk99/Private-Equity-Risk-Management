@@ -1,0 +1,259 @@
+# Run in R
+
+library(tidyverse)
+
+compiled.values = data.frame(matrix(nrow=0,ncol=10))
+
+N.iter = 1000
+
+# Static parameters
+T=12;K=1000;dt=T/K; k=1:K;t=dt*k; zero.vec=matrix(0,1,K)
+d=0.41;vard=0.21; C0=100;D0=0;nu=0.08;vnu=0.11
+D.vec=zero.vec;changeD.vec=zero.vec
+V0=0;muV=0.128; Bm=1.3;varm=0.15; vare=0.35;
+lambda_J=0.5;mu_J=0.1;sigma_J=0.5;V.vec=zero.vec
+R0=0;R.vec=zero.vec; rf=0.005; C.vec=zero.vec
+lambda_J=100;mu_J=0.1;sigma_J=0.5;V.vec=k; lambda=0.1; a=0.1; b=0.1; CF.vec=zero.vec
+
+# Random draws
+set.seed(5)
+comp.delta.normals = matrix(rnorm(N.iter*K),N.iter,K)
+comp.nu.normals = matrix(rnorm(N.iter*K),N.iter,K)
+comp.market.normals = matrix(rnorm(N.iter*K),N.iter,K)
+comp.eta.normals = matrix(rnorm(N.iter*K),N.iter,K)
+comp.jump.pois=matrix(rpois(N.iter*K, lambda*dt),N.iter,K)
+
+for (iter.idx in 1:N.iter){
+  
+  ## Draw random values for iteration
+  delta.normal.1000=comp.delta.normals[iter.idx,]
+  nu.normal.1000=comp.nu.normals[iter.idx,]
+  market.normal.1000=comp.market.normals[iter.idx,]
+  eta.normal.1000=comp.eta.normals[iter.idx,]
+
+  ## Drawdown delta
+  d.series=d+vard*delta.normal.1000*sqrt(dt*k)
+  
+  ## Drawdown D
+
+  D1=D0+d.series[1]*(C0-D0)*dt
+  D.vec[1]=D1
+  for (i in 2:K)
+    D.vec[i]=D.vec[i-1]+d.series[i]*(C0-D.vec[i-1])*dt
+  
+  ## Distribution rate v
+  nu.series=nu*k*dt+vnu*nu.normal.1000*sqrt(dt*k)
+  
+  ## Fund value V
+  V.vec[1]=d.series[1]*(C0)*dt
+  poisson.jump.1000=comp.jump.pois[iter.idx,]
+  for (i in 2:K)
+    V.vec[i]=V.vec[i-1]*(1+muV*dt+Bm*varm*market.normal.1000[i]*sqrt(dt)+vare*eta.normal.1000[i]*
+                           sqrt(dt))-nu.series[i]*V.vec[i-1]*dt+d.series[i]*(C0-D.vec[i-1])*dt
+  
+  ## Distributions
+  R.vec[1]=R0+nu.series[1]*V.vec[1]*dt
+  for (i in 2:K)
+    R.vec[i]=R.vec[i-1]+nu.series[i]*V.vec[i]*dt
+  
+  ##Cash pool
+  
+  C.vec[1]=C0-d.series[1]*(C0)*dt
+  for (i in 2:K)
+    C.vec[i]=C.vec[i-1]*(1+rf*dt)+nu.series[i]*V.vec[i-1]*dt-d.series[i]*(C0-D.vec[i-1])*dt
+  
+  ## Portfolio position
+  P.vec=zero.vec; P.vec=C.vec+V.vec
+  CF.vec=R.vec-D.vec
+  #plot(t,P.vec,type="l")
+  
+  ## Store variables in dataframes per edition
+  buchner.df <- data.frame(
+    iter = iter.idx,
+    ed = 'buchner',
+    time.idx = k,
+    p.vec.values = P.vec[1,],
+    d.series.values = d.series,
+    nu.series.values = nu.series,
+    d.vec.values=D.vec[1,],
+    v.vec.values=V.vec,
+    r.vec.values=R.vec[1,],
+    c.vec.values=C.vec[1,],
+    cf.vec.values=CF.vec[1,],
+    p.fees.values=NA
+  )
+  
+  compiled.values <- rbind(compiled.values,buchner.df)
+  print(N.iter)
+}
+toc()
+
+smooth.compiled.d.values <- compiled.values %>%
+  group_by(ed,time.idx) %>%
+  summarise(mean.y.vals = mean(d.vec.values,na.rm=TRUE),
+            sd.y.vals = sd(d.vec.values,na.rm=TRUE)) %>%
+  mutate(plot.name = 'Cumulated Capital Drawdowns')
+  
+smooth.compiled.r.values <- compiled.values %>%
+  group_by(ed,time.idx) %>%
+  summarise(mean.y.vals = mean(r.vec.values,na.rm=TRUE),
+            sd.y.vals = sd(r.vec.values,na.rm=TRUE)) %>%
+  mutate(plot.name = 'Cumulated Capital Distributions')
+
+smooth.compiled.cf.values <- compiled.values %>%
+  group_by(ed,time.idx) %>%
+  summarise(mean.y.vals = mean(cf.vec.values,na.rm=TRUE),
+            sd.y.vals = sd(cf.vec.values,na.rm=TRUE)) %>%
+  mutate(plot.name = 'Cumulated Net Fund Cash Flows')
+
+smooth.compiled.v.values <- compiled.values %>%
+  group_by(ed,time.idx) %>%
+  summarise(mean.y.vals = mean(v.vec.values,na.rm=TRUE),
+            sd.y.vals = sd(v.vec.values,na.rm=TRUE)) %>%
+  mutate(plot.name = 'Fund Values')
+
+smooth.compiled.v.jump.values<-long.v.jump %>%
+  mutate(ed = 'jump') %>%
+  group_by(ed, time.idx) %>%
+  summarise(mean.y.vals=mean(v.jump, na.rm=TRUE),
+            sd.y.vals = sd(v.jump,na.rm=TRUE)) %>%
+  mutate(plot.name ='Fund Values (Poisson Jump)')
+
+compiled.plot.df <- rbind(smooth.compiled.d.values,
+                          smooth.compiled.r.values,
+                          smooth.compiled.cf.values,
+                          smooth.compiled.v.values)
+
+guideline <- data.frame(guide.x = seq(0,12,length.out = K)) %>%
+  mutate(guide.y = N.iter*exp(.05*guide.x))
+
+smooth.plots <- compiled.plot.df %>%
+  mutate(Years = time.idx*(12/K)) %>%
+  mutate(plot.name = factor(plot.name, levels = c("Cumulated Capital Drawdowns","Cumulated Capital Distributions","Cumulated Net Fund Cash Flows","Fund Values"))) %>%
+  ggplot(aes(x = Years, fill = ed)) +
+  geom_line(aes(y = mean.y.vals, colour=ed), size = 1) +
+  geom_ribbon(aes(ymin=mean.y.vals-1.282*sd.y.vals,ymax=mean.y.vals+1.282*sd.y.vals),alpha=0.2) +
+  facet_wrap(~plot.name,
+             ncol = 2,
+             scales = 'free') +
+  scale_x_continuous(breaks = 0:12,
+                     expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text=element_text(size=20),
+        axis.title = element_text(size = 20),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none",
+        plot.margin = unit(c(0.5,0.5,0.5,.5), "cm"),
+        strip.text = element_text(size = 20))
+
+smooth.plots.v <- smooth.compiled.v.values %>%
+  mutate(Years = time.idx*(12/K)) %>%
+  mutate(plot.name = factor(plot.name, levels = c("Fund Values"))) %>%
+  ggplot(aes(x = Years, fill = ed)) +
+  geom_line(aes(y = mean.y.vals, colour=ed), size = 1) +
+  geom_ribbon(aes(ymin=mean.y.vals-1.282*sd.y.vals,ymax=mean.y.vals+1.282*sd.y.vals),alpha=0.2) +
+  facet_wrap(~plot.name,
+             ncol = 2,
+             scales = 'free') +
+  scale_x_continuous(breaks = 0:12,
+                     expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text=element_text(size=20),
+        axis.title = element_text(size = 20),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none",
+        plot.margin = unit(c(0.5,0.7,0.5,0.2), "cm"),
+        strip.text = element_text(size = 20))
+
+  
+  ggsave("DynamicsFinal.png", device = png(),
+    path = NULL,
+    scale = 1,
+    width = NA,
+    height = NA,
+    dpi = 300,
+    limitsize = TRUE)
+
+  geom_smooth()
+
+plot(smooth.plots)
+
+draw.v=data.matrix(compiled.values_buchner_2[c("v.vec.values")])
+new.v.10=t(matrix(draw.v,nrow = K,ncol = N.iter))
+
+draw.p=data.matrix(compiled.values_buchner_2[c("p.vec.values")])
+new.p.10 = t(matrix(draw.p,nrow = K,ncol = N.iter))
+
+compiled.plot.2.df <- rbind(smooth.compiled.v.values,
+                          smoothed.compiled.v.jump.values)
+guideline <- data.frame(guide.x = seq(0,12,length.out = K)) %>%
+  mutate(guide.y = N.iter*exp(.05*guide.x))
+
+compiled.plot.2.df$lower.bound <- compiled.plot.2.df$mean.y.vals-1.282*compiled.plot.2.df$sd.y.vals
+compiled.plot.2.df$lower.bound[compiled.plot.2.df$lower.bound < 0] <- 0
+
+smooth.plots <- compiled.plot.2.df %>%
+  mutate(years = time.idx*(12/K)) %>%
+  mutate(plot.name = factor(plot.name, levels = c("Fund Values (Buchner)", "Fund Values (Poisson Jump)"))) %>%
+  ggplot(aes(x = years, fill = ed)) +
+  geom_line(aes(y = mean.y.vals, colour=ed), size = 1) +
+  geom_ribbon(aes(ymin=lower.bound,ymax=mean.y.vals+1.282*sd.y.vals),alpha=0.2) +
+  facet_wrap(~plot.name,
+             ncol = 2) +
+  scale_x_continuous(breaks = 0:12,
+                     expand = c(0,0), limits=c(0,12)) +
+  xlab('Years')+
+  scale_y_continuous(expand = c(0,0)) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        panel.spacing=unit(2,"lines"),
+        plot.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text=element_text(size=14),
+        axis.title = element_text(size = 14),
+        strip.text = element_text(size = 14))
+
+  ggsave("Comparison.png", device = png(),
+        path = NULL,
+        scale = 1,
+        width = 16,
+        height = 8,
+        dpi = 300,
+        limitsize = TRUE)
+
+last=new[1:N.iter,K]
+
+loss=100-new.p.buchner.10000
+VaR_10_buchner=zero.vec; VaR_5_buchner=zero.vec; VaR_1_buchner=zero.vec
+VaR_10_buchner[1]=0; VaR_5_buchner[1]=0; VaR_1_buchner[1]=0
+
+for (i in 2:dim(new.p.buchner.10000)[2])
+  VaR_10_buchner[i]=min(loss[,i][loss[,i]>quantile(loss[,i],0.9,na.rm=TRUE)], na.rm=TRUE)
+
+for (i in 2:dim(new.p.buchner.10000)[2])
+  VaR_5_buchner[i]=min(loss[,i][loss[,i]>quantile(loss[,i],0.95,na.rm=TRUE)], na.rm=TRUE)
+
+for (i in 2:dim(new.p.buchner.10000)[2])
+  VaR_1_buchner[i]=min(loss[,i][loss[,i]>quantile(loss[,i],0.99,na.rm=TRUE)], na.rm=TRUE)
+
+data_buchner= t(rbind(t,VaR_10_buchner, VaR_5_buchner, VaR_1_buchner))
+data_frame_buchner=data.frame(data_buchner); attach(data_frame_buchner)
+curve_values_VaR_10_buchner=loess(V2~t)
+curve_values_VaR_5_buchner=loess(V3~t)
+curve_values_VaR_1_buchner=loess(V4~t)
+plot(t, predict(curve_values_VaR_1_buchner), type = "l",col="blue")
+
+smoothed.buchner.VaR=cbind(t,predict(curve_values_VaR_10_buchner),predict(curve_values_VaR_5_buchner),predict(curve_values_VaR_1_buchner))
+
+long.v.jump <- as.data.frame(new.v.jump.10000) %>% 
+  pivot_longer(cols = everything(), names_to = 'time.idx',values_to = 'v.jump') %>%
+  mutate(time.idx = as.numeric(sub('.','',time.idx))) 
+long.v.jump <- long.v.jump %>%
+  mutate(years = time.idx*(12/K))
