@@ -86,7 +86,6 @@ for (iter.idx in 1:N.iter){
   compiled.values <- rbind(compiled.values,buchner.df)
   print(N.iter)
 }
-toc()
 
 smooth.compiled.d.values <- compiled.values %>%
   group_by(ed,time.idx) %>%
